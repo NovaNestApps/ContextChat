@@ -3,9 +3,8 @@ from tkinter import scrolledtext, simpledialog, messagebox
 import requests
 import threading
 
-
-MCP_URL = "http://localhost:8000"  # Adjust if needed
-USER_ID = "user1"  # Static for MVP
+MCP_URL = "http://localhost:8000"
+USER_ID = "user1"
 
 
 def send_message():
@@ -13,14 +12,38 @@ def send_message():
     if not message or message == "Ask anything":
         return
 
-    chat_display.insert(tk.END, f"You: {message}\n\n")
-    chat_display.insert(tk.END, "AI: (thinking...)\n", "ai_thinking")
-    chat_display.see(tk.END)
+    input_field.config(state=tk.DISABLED)
     input_field.delete(0, tk.END)
 
-    # Call LLaMA in background thread
+    chat_display.insert(tk.END, "You: ", "user_label")
+    chat_display.insert(tk.END, f"{message}\n\n", "user_msg")
+    chat_display.insert(tk.END, "AI: (thinking...)\n\n", "ai_thinking")
+    chat_display.see(tk.END)
+
     threading.Thread(target=fetch_llama_response, args=(message,), daemon=True).start()
 
+
+
+def fetch_llama_response(message):
+    payload = {"user_id": USER_ID, "message": message}
+    try:
+        response = requests.post(f"{MCP_URL}/chat", json=payload)
+        reply = response.json().get("response", "")
+    except Exception as e:
+        reply = f"Error: {e}"
+
+    root.after(0, lambda: update_ai_response(reply))
+
+
+def update_ai_response(response_text):
+    # Remove "(thinking...)" line
+    chat_display.delete("end-3l", "end-2l")
+
+    chat_display.insert(tk.END, "AI: ", "ai_label")
+    chat_display.insert(tk.END, f"{response_text}\n\n", "ai_response")
+    chat_display.see(tk.END)
+    input_field.config(state=tk.NORMAL)
+    input_field.focus_set()
 
 
 def add_url():
@@ -38,32 +61,11 @@ def add_url():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
-def fetch_llama_response(message):
-    payload = {"user_id": USER_ID, "message": message}
-    try:
-        response = requests.post(f"{MCP_URL}/chat", json=payload)
-        reply = response.json().get("response", "")
-    except Exception as e:
-        reply = f"Error: {e}"
-
-    chat_display.insert(tk.END, "AI: (thinking...)\n", "ai_thinking")
-    chat_display.see(tk.END)
-    root.after(500, lambda: update_ai_response(reply))
-
-
-def update_ai_response(response_text):
-    # Delete the temporary "(thinking...)" line
-    chat_display.delete("end-3l", "end-2l")
-
-    # Add formatted AI response
-    chat_display.insert(tk.END, f"AI: {response_text}\n\n", "ai_response")
-    chat_display.see(tk.END)
-
 
 # Root window setup
 root = tk.Tk()
 root.title("ContextChat")
-root.geometry("600x500")
+root.geometry("650x550")
 
 font_main = ("Arial", 12)
 
@@ -79,6 +81,9 @@ url_button.pack(side=tk.RIGHT)
 
 # Chat Display
 chat_display = scrolledtext.ScrolledText(root, wrap=tk.WORD, font=font_main)
+chat_display.tag_configure("user_label", foreground="white", font=("Arial", 12, "bold"))
+chat_display.tag_configure("user_msg", foreground="white")
+chat_display.tag_configure("ai_label", foreground="green", font=("Arial", 12, "bold"))
 chat_display.tag_configure("ai_response", foreground="green")
 chat_display.tag_configure("ai_thinking", foreground="gray", font=("Arial", 10, "italic"))
 chat_display.pack(expand=True, fill=tk.BOTH, padx=10, pady=5)
@@ -96,4 +101,5 @@ input_field.bind("<Return>", lambda event: send_message())
 send_button = tk.Button(input_frame, text="Send", command=send_message)
 send_button.pack(side=tk.RIGHT)
 
+input_field.focus_set()
 root.mainloop()
