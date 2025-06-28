@@ -3,8 +3,6 @@
 
 **ContextChat** is a fully local, privacy-respecting AI chat application powered by open-source LLMs (like LLaMA via Ollama). It enhances chat responses by integrating context from user-defined web pages, all running entirely on your machine.
 
----
-
 ## Features (Current MVP)
 
 ✔ Local desktop chat app with clean, simple UI.  
@@ -14,7 +12,6 @@
 ✔ LLM responses via Ollama using GGUF models (e.g., LLaMA, Mistral).  
 ✔ No internet required after setup — fully private, local inference.  
 
----
 
 ## Getting Started
 
@@ -35,8 +32,6 @@ ollama serve
 ollama pull mistral  # Or your preferred model
 ```
 
----
-
 ### 2. **Set Up MCP Server**
 
 In `mcp_server` folder:
@@ -45,8 +40,6 @@ In `mcp_server` folder:
 pip install -r requirements.txt
 uvicorn main:app --reload
 ```
-
----
 
 ### 3. **Run GUI Chat App**
 
@@ -57,7 +50,6 @@ pip install -r requirements.txt
 python app.py
 ```
 
----
 
 ## Project Structure
 
@@ -68,8 +60,6 @@ contextchat/
 └── README.md
 ```
 
----
-
 ## How It Works
 
 1. You chat via the GUI.  
@@ -78,15 +68,11 @@ contextchat/
 4. MCP sends a combined prompt to Ollama.  
 5. LLM generates a response, displayed in the GUI.  
 
----
-
 ## Requirements
 
 - Python 3.9+  
 - Ollama installed locally  
 - Internet only needed to pull models initially  
-
----
 
 ## Planned Future Development
 
@@ -101,8 +87,6 @@ contextchat/
 - [ ] Easy packaging for Mac/Linux as standalone desktop app.  
 - [ ] Open-source community contributions welcome.  
 
----
-
 ## Why Local?
 
 ✔ Full privacy — no data leaves your machine.  
@@ -110,18 +94,13 @@ contextchat/
 ✔ Fast, responsive LLM inference with no network delay.  
 ✔ Ideal for researchers, developers, privacy-conscious users.  
 
----
-
 ## Contributing
 
 This is an evolving open-source project. Pull requests, suggestions, and issue reports are welcome!
 
----
 
 ## Disclaimer
 
 This is a work-in-progress prototype. Expect rough edges and active development.  
-
----
 
 **Enjoy your private AI chat experience!**
