@@ -3,17 +3,16 @@
 
 **ContextChat** is a fully local, privacy-respecting AI chat application powered by open-source LLMs (like LLaMA via Ollama). It enhances chat responses by integrating context from user-defined web pages, all running entirely on your machine.
 
-If you like learning by reding please checkout block post about [ContextChat](https://dev.to/novanest_82b6db17c07b068f/forget-cloud-ai-build-your-own-private-chat-app-with-web-context-using-ollama-36hj).
+If you like learning by reading, please check out the blog post about [ContextChat](https://dev.to/novanest_82b6db17c07b068f/forget-cloud-ai-build-your-own-private-chat-app-with-web-context-using-ollama-36hj).
 
 ## Features (Current MVP)
 
-✔ Local desktop chat app with clean, simple UI.  
+✔ Local desktop chat app with clean, simple UI (Tkinter-based).  
 ✔ Sends messages to a local MCP (Message/Context/Prompt) server.  
 ✔ MCP server manages conversation history and context.  
 ✔ Users can add URLs — MCP extracts content and feeds it to the LLM.  
 ✔ LLM responses via Ollama using GGUF models (e.g., LLaMA, Mistral).  
 ✔ No internet required after setup — fully private, local inference.  
-
 
 ## Getting Started
 
@@ -52,7 +51,6 @@ pip install -r requirements.txt
 python app.py
 ```
 
-
 ## Project Structure
 
 ```
@@ -78,16 +76,15 @@ contextchat/
 
 ## Planned Future Development
 
-- [ ] Show added URLs directly in the GUI.  
-- [ ] GUI button to clear/reset context.  
-- [ ] Save and load chat history to/from files.  
+- [x] Show added URLs directly in the GUI.  
+- [x] GUI button to clear/reset context.  
+- [x] Save and load chat history to/from files.  
 - [ ] Visual theme improvements (color scheme, fonts, layouts).  
-- [ ] Streaming LLM responses for real-time chat feel.  
-- [ ] Switch to Flet or PyQt for modern GUI experience (optional).  
-- [ ] Support document (PDF, TXT) ingestion as context.  
+- [x] Streaming LLM responses for real-time chat feel.  
+- [ ] Switch to Flet or PyQt for modern GUI experience (separate branch).  
+- [x] Support document (PDF, TXT) ingestion as context.  
 - [ ] Advanced crawler with JavaScript rendering (Playwright integration).  
 - [ ] Easy packaging for Mac/Linux as standalone desktop app.  
-- [ ] Open-source community contributions welcome.  
 
 ## Why Local?
 
@@ -99,7 +96,6 @@ contextchat/
 ## Contributing
 
 This is an evolving open-source project. Pull requests, suggestions, and issue reports are welcome!
-
 
 ## Disclaimer
 
