@@ -104,3 +104,8 @@ def remove_url(req: UrlRequest):
     context_data[req.user_id] = user_context
 
     return {"message": "URL removed and context updated"}
+
+@app.post("/reset-context")
+def reset_context(user_id: str = Query(...)):
+    context_data.pop(user_id, None)
+    return {"message": "Context reset"}

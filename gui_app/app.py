@@ -91,6 +91,22 @@ def delete_selected_url():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
+def reset_context():
+    confirm = messagebox.askyesno("Reset Context", "Are you sure you want to clear all context and URLs?")
+    if not confirm:
+        return
+
+    try:
+        response = requests.post(f"{MCP_URL}/reset-context", params={"user_id": USER_ID})
+        if response.status_code == 200:
+            chat_display.delete(1.0, tk.END)
+            urls_listbox.delete(0, tk.END)
+            messagebox.showinfo("Success", "Context cleared.")
+        else:
+            messagebox.showerror("Error", f"{response.status_code} - {response.text}")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
 
 # Root window setup
 root = tk.Tk()
@@ -145,5 +161,8 @@ urls_listbox.pack(fill=tk.BOTH, expand=True)
 
 delete_button = tk.Button(urls_frame, text="Remove Selected URL", command=delete_selected_url)
 delete_button.pack(pady=2, anchor=tk.E)
+
+reset_button = tk.Button(top_frame, text="Reset Context", command=reset_context)
+reset_button.pack(side=tk.RIGHT, padx=(5, 0))
 
 root.mainloop()
