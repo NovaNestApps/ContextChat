@@ -78,10 +78,13 @@ def add_url(req: UrlRequest):
     context_data[req.user_id] = user_context
     return {"message": "URL added and context updated"}
 
-@app.get("/get-urls")
-def get_urls(user_id: str = Query(...)):
+@app.get("/get-context-items")
+def get_context_items(user_id: str = Query(...)):
     user_context = context_data.get(user_id, {})
-    return {"urls": user_context.get("urls", [])}
+    return {
+        "urls": user_context.get("urls", []),
+        "documents": [doc["name"] for doc in user_context.get("documents", [])]
+    }
 
 @app.post("/remove-url")
 def remove_url(req: UrlRequest):
@@ -131,3 +134,52 @@ def chat_stream(req: ChatRequest):
                 yield token
 
     return StreamingResponse(generate(), media_type="text/plain")
+
+class DocumentRequest(BaseModel):
+    user_id: str
+    document_text: str
+    document_name: str
+
+
+@app.post("/add-document")
+def add_document(req: DocumentRequest):
+    user_context = context_data.get(req.user_id, {"history": "", "urls": [], "documents": [], "url_text": ""})
+
+    user_context["documents"].append({"name": req.document_name, "text": req.document_text})
+    user_context["url_text"] += f"\nContext from document ({req.document_name}):\n{req.document_text}"
+
+    if len(user_context["url_text"]) > 5000:
+        user_context["url_text"] = user_context["url_text"][-5000:]
+
+    context_data[req.user_id] = user_context
+    return {"message": "Document context added"}
+
+class DocumentRemoveRequest(BaseModel):
+    user_id: str
+    document_name: str
+
+
+@app.post("/remove-document")
+def remove_document(req: DocumentRemoveRequest):
+    user_context = context_data.get(req.user_id, {})
+    documents = user_context.get("documents", [])
+    url_text = user_context.get("url_text", "")
+
+    doc_to_remove = next((d for d in documents if d["name"] == req.document_name), None)
+    if not doc_to_remove:
+        raise HTTPException(status_code=400, detail="Document not found.")
+
+    documents.remove(doc_to_remove)
+
+    # Rebuild url_text from remaining URLs and Documents
+    combined_text = ""
+    for u in user_context.get("urls", []):
+        combined_text += f"\nContext from {u}:\n{extract_text_from_url(u)}"
+    for d in documents:
+        combined_text += f"\nContext from document ({d['name']}):\n{d['text']}"
+
+    user_context["documents"] = documents
+    user_context["url_text"] = combined_text
+    context_data[req.user_id] = user_context
+
+    return {"message": "Document removed and context updated"}
