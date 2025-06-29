@@ -2,6 +2,7 @@ import tkinter as tk
 from tkinter import scrolledtext, simpledialog, messagebox
 import requests
 import threading
+from tkinter import filedialog
 
 MCP_URL = "http://localhost:8000"
 USER_ID = "user1"
@@ -11,15 +12,13 @@ def send_message():
     message = input_field.get()
     if not message or message == "Ask anything":
         return
-
-    input_field.config(state=tk.DISABLED)
     input_field.delete(0, tk.END)
+    input_field.config(state=tk.DISABLED)
 
     chat_display.insert(tk.END, "You: ", "user_label")
     chat_display.insert(tk.END, f"{message}\n\n", "user_msg")
     chat_display.insert(tk.END, "AI: (thinking...)\n\n", "ai_thinking")
     chat_display.see(tk.END)
-
     threading.Thread(target=fetch_llama_response, args=(message,), daemon=True).start()
 
 
@@ -107,6 +106,32 @@ def reset_context():
     except Exception as e:
         messagebox.showerror("Error", str(e))
 
+def save_chat():
+    file_path = filedialog.asksaveasfilename(defaultextension=".txt", filetypes=[("Text Files", "*.txt")])
+    if not file_path:
+        return
+
+    try:
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(chat_display.get(1.0, tk.END))
+        messagebox.showinfo("Success", "Chat saved successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to save chat: {e}")
+
+
+def load_chat():
+    file_path = filedialog.askopenfilename(filetypes=[("Text Files", "*.txt")])
+    if not file_path:
+        return
+
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            content = f.read()
+        chat_display.delete(1.0, tk.END)
+        chat_display.insert(tk.END, content)
+        messagebox.showinfo("Success", "Chat loaded successfully.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to load chat: {e}")
 
 # Root window setup
 root = tk.Tk()
@@ -164,5 +189,15 @@ delete_button.pack(pady=2, anchor=tk.E)
 
 reset_button = tk.Button(top_frame, text="Reset Context", command=reset_context)
 reset_button.pack(side=tk.RIGHT, padx=(5, 0))
+
+file_buttons_frame = tk.Frame(root)
+file_buttons_frame.pack(fill=tk.X, padx=10, pady=5)
+
+save_button = tk.Button(file_buttons_frame, text="Save Chat", command=save_chat)
+save_button.pack(side=tk.LEFT)
+
+load_button = tk.Button(file_buttons_frame, text="Load Chat", command=load_chat)
+load_button.pack(side=tk.LEFT, padx=(5, 0))
+
 
 root.mainloop()
