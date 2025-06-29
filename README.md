@@ -3,6 +3,8 @@
 
 **ContextChat** is a fully local, privacy-respecting AI chat application powered by open-source LLMs (like LLaMA via Ollama). It enhances chat responses by integrating context from user-defined web pages, all running entirely on your machine.
 
+If you like learning by reding please checkout block post about [ContextChat](https://dev.to/novanest_82b6db17c07b068f/forget-cloud-ai-build-your-own-private-chat-app-with-web-context-using-ollama-36hj).
+
 ## Features (Current MVP)
 
 ✔ Local desktop chat app with clean, simple UI.  
