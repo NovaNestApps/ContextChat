@@ -4,6 +4,8 @@ import requests
 from crawler import extract_text_from_url
 from context_store import context_data
 from fastapi import Query
+from fastapi.responses import StreamingResponse
+import json
 
 app = FastAPI()
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -109,3 +111,23 @@ def remove_url(req: UrlRequest):
 def reset_context(user_id: str = Query(...)):
     context_data.pop(user_id, None)
     return {"message": "Context reset"}
+
+@app.post("/chat-stream")
+def chat_stream(req: ChatRequest):
+    user_context = context_data.get(req.user_id, {})
+    history = user_context.get("history", "")
+    url_text = user_context.get("url_text", "")
+
+    full_prompt = f"{url_text}\n{history}\nUser: {req.message}\nAI:"
+
+    payload = {"model": MODEL_NAME, "prompt": full_prompt, "stream": True}
+    response = requests.post(OLLAMA_URL, json=payload, stream=True)
+
+    def generate():
+        for line in response.iter_lines():
+            if line:
+                data = json.loads(line.decode("utf-8"))
+                token = data.get("response", "")
+                yield token
+
+    return StreamingResponse(generate(), media_type="text/plain")

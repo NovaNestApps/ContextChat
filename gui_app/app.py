@@ -12,26 +12,38 @@ def send_message():
     message = input_field.get()
     if not message or message == "Ask anything":
         return
+
     input_field.delete(0, tk.END)
     input_field.config(state=tk.DISABLED)
-
     chat_display.insert(tk.END, "You: ", "user_label")
     chat_display.insert(tk.END, f"{message}\n\n", "user_msg")
-    chat_display.insert(tk.END, "AI: (thinking...)\n\n", "ai_thinking")
+    chat_display.insert(tk.END, "AI: ", "ai_label")
     chat_display.see(tk.END)
-    threading.Thread(target=fetch_llama_response, args=(message,), daemon=True).start()
 
 
+    threading.Thread(target=fetch_llama_stream_response, args=(message,), daemon=True).start()
 
-def fetch_llama_response(message):
+
+def fetch_llama_stream_response(message):
     payload = {"user_id": USER_ID, "message": message}
     try:
-        response = requests.post(f"{MCP_URL}/chat", json=payload)
-        reply = response.json().get("response", "")
+        with requests.post(f"{MCP_URL}/chat-stream", json=payload, stream=True) as response:
+            for chunk in response.iter_content(chunk_size=None):
+                if chunk:
+                    token = chunk.decode("utf-8")
+                    root.after(0, lambda t=token: chat_display.insert(tk.END, t, "ai_response"))
     except Exception as e:
-        reply = f"Error: {e}"
+        root.after(0, lambda: chat_display.insert(tk.END, f"\nError: {e}\n", "ai_response"))
 
-    root.after(0, lambda: update_ai_response(reply))
+    root.after(0, finalize_stream)
+
+
+def finalize_stream():
+    chat_display.insert(tk.END, "\n\n")
+    chat_display.see(tk.END)
+    input_field.config(state=tk.NORMAL)
+    input_field.focus_set()
+
 
 
 def update_ai_response(response_text):
