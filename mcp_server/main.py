@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import requests
 from crawler import extract_text_from_url
 from context_store import context_data
+from fastapi import Query
 
 app = FastAPI()
 OLLAMA_URL = "http://localhost:11434/api/generate"
@@ -58,8 +59,8 @@ MAX_URLS = 3  # Limit to 3 URLs for MVP
 def add_url(req: UrlRequest):
     user_context = context_data.get(req.user_id, {"history": "", "urls": [], "url_text": ""})
 
-    if len(user_context["urls"]) >= MAX_URLS:
-        raise HTTPException(status_code=400, detail="URL limit reached. Remove a URL first.")
+    if req.url in user_context["urls"]:
+        raise HTTPException(status_code=400, detail="URL already added.")
 
     text = extract_text_from_url(req.url)
     if not text:
@@ -75,3 +76,31 @@ def add_url(req: UrlRequest):
     context_data[req.user_id] = user_context
     return {"message": "URL added and context updated"}
 
+@app.get("/get-urls")
+def get_urls(user_id: str = Query(...)):
+    user_context = context_data.get(user_id, {})
+    return {"urls": user_context.get("urls", [])}
+
+@app.post("/remove-url")
+def remove_url(req: UrlRequest):
+    user_context = context_data.get(req.user_id, {})
+    urls = user_context.get("urls", [])
+    url_text = user_context.get("url_text", "")
+
+    if req.url not in urls:
+        raise HTTPException(status_code=400, detail="URL not found.")
+
+    # Remove URL from list
+    urls.remove(req.url)
+
+    # Rebuild url_text from remaining URLs
+    combined_text = ""
+    for u in urls:
+        combined_text += f"\nContext from {u}:\n{extract_text_from_url(u)}"
+
+    # Update context
+    user_context["urls"] = urls
+    user_context["url_text"] = combined_text
+    context_data[req.user_id] = user_context
+
+    return {"message": "URL removed and context updated"}

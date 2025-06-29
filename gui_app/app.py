@@ -56,6 +56,36 @@ def add_url():
         response = requests.post(f"{MCP_URL}/add-url", json=payload)
         if response.status_code == 200:
             messagebox.showinfo("Success", "URL added.")
+            refresh_urls()
+        else:
+            messagebox.showerror("Error", f"{response.status_code} - {response.text}")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
+
+def refresh_urls():
+    try:
+        response = requests.get(f"{MCP_URL}/get-urls", params={"user_id": USER_ID})
+        if response.status_code == 200:
+            urls = response.json().get("urls", [])
+            urls_listbox.delete(0, tk.END)
+            for u in urls:
+                urls_listbox.insert(tk.END, u)
+    except Exception as e:
+        messagebox.showerror("Error", f"Failed to fetch URLs: {e}")
+
+def delete_selected_url():
+    selected = urls_listbox.curselection()
+    if not selected:
+        messagebox.showwarning("Warning", "Please select a URL to delete.")
+        return
+
+    url = urls_listbox.get(selected[0])
+    payload = {"user_id": USER_ID, "url": url}
+    try:
+        response = requests.post(f"{MCP_URL}/remove-url", json=payload)
+        if response.status_code == 200:
+            messagebox.showinfo("Success", "URL removed.")
+            refresh_urls()
         else:
             messagebox.showerror("Error", f"{response.status_code} - {response.text}")
     except Exception as e:
@@ -102,4 +132,18 @@ send_button = tk.Button(input_frame, text="Send", command=send_message)
 send_button.pack(side=tk.RIGHT)
 
 input_field.focus_set()
+
+# URLs Display Frame
+urls_frame = tk.Frame(root)
+urls_frame.pack(fill=tk.BOTH, padx=10, pady=5)
+
+urls_label = tk.Label(urls_frame, text="Added URLs:", font=("Arial", 11, "bold"))
+urls_label.pack(anchor=tk.W)
+
+urls_listbox = tk.Listbox(urls_frame, height=3)
+urls_listbox.pack(fill=tk.BOTH, expand=True)
+
+delete_button = tk.Button(urls_frame, text="Remove Selected URL", command=delete_selected_url)
+delete_button.pack(pady=2, anchor=tk.E)
+
 root.mainloop()
